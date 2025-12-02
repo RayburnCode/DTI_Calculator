@@ -4,13 +4,69 @@ use dioxus::prelude::*;
 #[component]
 pub fn Navbar() -> Element {
     rsx! {
-
-        div { id: "navbar",
-            Link { to: Route::Home {}, "Home" }
-            Link { to: Route::MainPage {}, "MainPage" }
-            Link { to: Route::Blog { id: 1 }, "Blog" }
+        nav { class: "bg-neutral-primary fixed w-full z-20 top-0 start-0 border-b border-default",
+            div { class: "max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4",
+                a {
+                    class: "flex items-center space-x-3 rtl:space-x-reverse",
+                    href: "https://flowbite.com/",
+                    img {
+                        alt: "Flowbite Logo",
+                        class: "h-7",
+                        src: "https://flowbite.com/docs/images/logo.svg",
+                    }
+                    span { class: "self-center text-xl text-heading font-semibold whitespace-nowrap",
+                        "Flowbite"
+                    }
+                }
+                button {
+                    aria_controls: "navbar-default",
+                    aria_expanded: "false",
+                    class: "inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-body rounded-base md:hidden hover:bg-neutral-secondary-soft hover:text-heading focus:outline-none focus:ring-2 focus:ring-neutral-tertiary",
+                    "data-collapse-toggle": "navbar-default",
+                    r#type: "button",
+                    span { class: "sr-only", "Open main menu" }
+                    svg {
+                        class: "w-6 h-6",
+                        fill: "none",
+                        height: "24",
+                        view_box: "0 0 24 24",
+                        width: "24",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        path {
+                            d: "M5 7h14M5 12h14M5 17h14",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_width: "2",
+                        }
+                    }
+                }
+                div {
+                    class: "hidden w-full md:block md:w-auto",
+                    id: "navbar-default",
+                    ul { class: "font-medium flex flex-col p-4 md:p-0 mt-4 border border-default rounded-base bg-neutral-secondary-soft md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-neutral-primary",
+                        li {
+                            Link { to: Route::Home {}, "Home" }
+                        }
+                        li {
+                            Link { to: Route::MainPage {}, "MainPage" }
+                        }
+                        li {
+                            a {
+                                class: "block py-2 px-3 text-heading rounded hover:bg-neutral-tertiary md:hover:bg-transparent md:border-0 md:hover:text-fg-brand md:p-0 md:dark:hover:bg-transparent",
+                                href: "#",
+                                "Help"
+                            }
+                        }
+                        li {
+                            a {
+                                class: "block py-2 px-3 text-heading rounded hover:bg-neutral-tertiary md:hover:bg-transparent md:border-0 md:hover:text-fg-brand md:p-0 md:dark:hover:bg-transparent",
+                                href: "#",
+                                "Reset"
+                            }
+                        }
+                    }
+                }
+            }
         }
-
-        Outlet::<Route> {}
     }
 }

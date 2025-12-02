@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
-use crate::components::SearchBar;
+
+use crate::components::dti::{Income, HousingPayment};
 
 #[component]
 pub fn MainPage() -> Element {
@@ -7,16 +8,10 @@ pub fn MainPage() -> Element {
         div { id: "main-page",
 
             h1 { "Welcome to the Main Page!" }
-
-            SearchBar {}
-
-            button {
-                // Global html attributes
-                class: "button",
-                "data-style": "outline",
-                        // {children}
-            }
+            Income {}
         }
+
+        HousingPayment {}
     }
 }
 

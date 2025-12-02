@@ -7,8 +7,8 @@ pub use hero::Hero;
 
 
 pub mod layout;
-pub mod button;
-pub mod navbar;
 
 pub mod search_bar;
 pub use search_bar::SearchBar;
+
+pub mod dti;
