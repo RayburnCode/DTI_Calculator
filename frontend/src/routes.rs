@@ -1,7 +1,7 @@
 
 use dioxus::prelude::*;
 
-use crate::views::{ Home, MainPage};
+use crate::views::{ Home, Help};
 use crate::components::layout::AppLayout;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
@@ -12,7 +12,7 @@ pub enum Route {
     #[layout(AppLayout)]
         #[route("/")]
         Home {},
-        #[route("/main")]
-        MainPage {},
+    #[route("/help")]
+        Help {},
 
 }

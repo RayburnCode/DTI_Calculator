@@ -1,22 +1,29 @@
 use crate::Route;
 use dioxus::prelude::*;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::JsCast;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::closure::Closure;
 
 #[component]
 pub fn Navbar() -> Element {
+    let mut reset = use_context::<Signal<usize>>();
+    // optional toast context
+    let mut toast = use_context::<Signal<Option<String>>>();
+
     rsx! {
-        nav { class: "bg-neutral-primary fixed w-full z-20 top-0 start-0 border-b border-default",
+        nav { class: "text-gray-900 fixed w-full z-20 top-0 start-0 border-b border-default bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm",
             div { class: "max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4",
-                a {
-                    class: "flex items-center space-x-3 rtl:space-x-reverse",
-                    href: "https://flowbite.com/",
+                a { class: "flex items-center space-x-3 rtl:space-x-reverse",
                     img {
-                        alt: "Flowbite Logo",
+                        alt: "Debt to Income Logo",
                         class: "h-7",
                         src: "https://flowbite.com/docs/images/logo.svg",
                     }
                     span { class: "self-center text-xl text-heading font-semibold whitespace-nowrap",
-                        "Flowbite"
+                        "DTI Calculator"
                     }
+                    Link { to: Route::Home {}, "Home" }
                 }
                 button {
                     aria_controls: "navbar-default",
@@ -44,23 +51,35 @@ pub fn Navbar() -> Element {
                     class: "hidden w-full md:block md:w-auto",
                     id: "navbar-default",
                     ul { class: "font-medium flex flex-col p-4 md:p-0 mt-4 border border-default rounded-base bg-neutral-secondary-soft md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-neutral-primary",
+
                         li {
-                            Link { to: Route::Home {}, "Home" }
+                            Link { to: Route::Help {}, "Help" }
                         }
                         li {
-                            Link { to: Route::MainPage {}, "MainPage" }
-                        }
-                        li {
-                            a {
-                                class: "block py-2 px-3 text-heading rounded hover:bg-neutral-tertiary md:hover:bg-transparent md:border-0 md:hover:text-fg-brand md:p-0 md:dark:hover:bg-transparent",
-                                href: "#",
-                                "Help"
-                            }
-                        }
-                        li {
-                            a {
-                                class: "block py-2 px-3 text-heading rounded hover:bg-neutral-tertiary md:hover:bg-transparent md:border-0 md:hover:text-fg-brand md:p-0 md:dark:hover:bg-transparent",
-                                href: "#",
+                            // Reset: increment the reset signal so child components can clear their local state, then navigate home
+                            Link {
+                                to: Route::Home {},
+                                onclick: move |_| {
+                                    reset.with_mut(|r| *r += 1usize);
+                                    // show brief toast
+                                    toast.set(Some("Reset complete".to_string()));
+                                    #[cfg(target_arch = "wasm32")]
+                                    {
+                                        // auto-clear after 2.5s on web
+                                        let toast_clone = toast.clone();
+                                        let closure = Closure::wrap(Box::new(move || {
+                                            toast_clone.set(None);
+                                        }) as Box<dyn Fn()>);
+                                        if let Some(win) = web_sys::window() {
+                                            let _ = win.set_timeout_with_callback_and_timeout_and_arguments_0(
+                                                closure.as_ref().unchecked_ref(),
+                                                2500,
+                                            );
+                                            // prevent the closure from being dropped immediately
+                                            closure.forget();
+                                        }
+                                    }
+                                },
                                 "Reset"
                             }
                         }
