@@ -6,26 +6,91 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn HousingPayment() -> Element {
-    let mut principal_interest = use_signal(|| 0.0);
-    let mut taxes = use_signal(|| 0.0);
-    let mut insurance = use_signal(|| 0.0);
-    let mut hoa = use_signal(|| 0.0);
+    let mut principal_interest = use_signal(|| String::new());
+    let mut taxes = use_signal(|| String::new());
+    let mut insurance = use_signal(|| String::new());
+    let mut hoa = use_signal(|| String::new());
     let mut total_housing_payment = use_signal(|| 0.0);
+    
+    // Helper to parse currency input (removes commas)
+    fn parse_currency(value: &str) -> f64 {
+        let cleaned: String = value.chars().filter(|c| c.is_numeric() || *c == '.').collect();
+        cleaned.parse::<f64>().unwrap_or(0.0)
+    }
+    
+    // Helper to format input display with commas
+    fn format_currency_input(value: &str) -> String {
+        let cleaned: String = value.chars().filter(|c| c.is_numeric() || *c == '.').collect();
+        if cleaned.is_empty() {
+            return String::new();
+        }
+        
+        // Don't format while typing - just return cleaned input
+        // Only validate it's a valid number format
+        if cleaned.contains('.') {
+            let parts: Vec<&str> = cleaned.split('.').collect();
+            if parts.len() == 2 {
+                let integer_part = parts[0];
+                let decimal_part = parts[1];
+                
+                // Add commas to integer part
+                let mut result = String::new();
+                for (i, ch) in integer_part.chars().rev().enumerate() {
+                    if i > 0 && i % 3 == 0 {
+                        result.push(',');
+                    }
+                    result.push(ch);
+                }
+                let formatted_int = result.chars().rev().collect::<String>();
+                
+                // Limit decimal to 2 places
+                let limited_decimal = if decimal_part.len() > 2 {
+                    &decimal_part[..2]
+                } else {
+                    decimal_part
+                };
+                
+                format!("{}.{}", formatted_int, limited_decimal)
+            } else {
+                cleaned
+            }
+        } else {
+            // Add commas to integer part only
+            let mut result = String::new();
+            for (i, ch) in cleaned.chars().rev().enumerate() {
+                if i > 0 && i % 3 == 0 {
+                    result.push(',');
+                }
+                result.push(ch);
+            }
+            result.chars().rev().collect::<String>()
+        }
+    }
     
     // Calculate total whenever any value changes
     use_effect(move || {
-        let total = principal_interest() + taxes() + insurance() + hoa();
+        let pi = parse_currency(&principal_interest.read());
+        let tx = parse_currency(&taxes.read());
+        let ins = parse_currency(&insurance.read());
+        let h = parse_currency(&hoa.read());
+        let total = pi + tx + ins + h;
         total_housing_payment.set(total);
+    });
+    
+    // Update global total_housing context
+    let mut total_housing_ctx = use_context::<Signal<f64>>();
+    use_effect(move || {
+        total_housing_ctx.set(total_housing_payment());
     });
 
     // Listen for global reset signal and clear housing payment fields
     let reset = use_context::<Signal<usize>>();
     use_effect(move || {
         if reset() > 0 {
-            principal_interest.set(0.0);
-            taxes.set(0.0);
-            insurance.set(0.0);
-            hoa.set(0.0);
+            principal_interest.set(String::new());
+            taxes.set(String::new());
+            insurance.set(String::new());
+            hoa.set(String::new());
             total_housing_payment.set(0.0);
         }
     });
@@ -46,17 +111,16 @@ pub fn HousingPayment() -> Element {
                         "Principal & Interest"
                     }
                     input {
-                        r#type: "number",
+                        r#type: "text",
                         id: "principal_interest",
                         name: "principal_interest",
                         placeholder: "0.00",
+                        inputmode: "decimal",
                         class: "px-3 py-2 border border-gray-300 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition",
+                        value: "{principal_interest}",
                         oninput: move |evt| {
-                            if let Ok(value) = evt.value().parse::<f64>() {
-                                principal_interest.set(value);
-                            } else {
-                                principal_interest.set(0.0);
-                            }
+                            let formatted = format_currency_input(&evt.value());
+                            principal_interest.set(formatted);
                         },
                     }
                 }
@@ -69,17 +133,16 @@ pub fn HousingPayment() -> Element {
                         "Property Taxes"
                     }
                     input {
-                        r#type: "number",
+                        r#type: "text",
                         id: "taxes",
                         name: "taxes",
                         placeholder: "0.00",
+                        inputmode: "decimal",
                         class: "px-3 py-2 border border-gray-300 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition",
+                        value: "{taxes}",
                         oninput: move |evt| {
-                            if let Ok(value) = evt.value().parse::<f64>() {
-                                taxes.set(value);
-                            } else {
-                                taxes.set(0.0);
-                            }
+                            let formatted = format_currency_input(&evt.value());
+                            taxes.set(formatted);
                         },
                     }
                 }
@@ -92,17 +155,16 @@ pub fn HousingPayment() -> Element {
                         "Homeowners Insurance"
                     }
                     input {
-                        r#type: "number",
+                        r#type: "text",
                         id: "insurance",
                         name: "insurance",
                         placeholder: "0.00",
+                        inputmode: "decimal",
                         class: "px-3 py-2 border border-gray-300 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition",
+                        value: "{insurance}",
                         oninput: move |evt| {
-                            if let Ok(value) = evt.value().parse::<f64>() {
-                                insurance.set(value);
-                            } else {
-                                insurance.set(0.0);
-                            }
+                            let formatted = format_currency_input(&evt.value());
+                            insurance.set(formatted);
                         },
                     }
                 }
@@ -115,17 +177,16 @@ pub fn HousingPayment() -> Element {
                         "HOA Fees"
                     }
                     input {
-                        r#type: "number",
+                        r#type: "text",
                         id: "hoa",
                         name: "hoa",
                         placeholder: "0.00",
+                        inputmode: "decimal",
                         class: "px-3 py-2 border border-gray-300 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition",
+                        value: "{hoa}",
                         oninput: move |evt| {
-                            if let Ok(value) = evt.value().parse::<f64>() {
-                                hoa.set(value);
-                            } else {
-                                hoa.set(0.0);
-                            }
+                            let formatted = format_currency_input(&evt.value());
+                            hoa.set(formatted);
                         },
                     }
                 }

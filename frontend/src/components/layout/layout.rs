@@ -10,6 +10,16 @@ pub fn AppLayout() -> Element {
     // Toast signal for brief notifications (optional auto-clear on web)
     let toast = use_signal(|| None::<String>);
     use_context_provider(|| toast);
+    
+    // DTI calculation context signals
+    let total_income = use_signal(|| 0.0f64);
+    use_context_provider(|| total_income);
+    
+    let total_debt = use_signal(|| 0.0f64);
+    use_context_provider(|| total_debt);
+    
+    let total_housing = use_signal(|| 0.0f64);
+    use_context_provider(|| total_housing);
 
     rsx! {
         div { class: "min-h-screen bg-gray-900 text-gray-100 flex flex-col",

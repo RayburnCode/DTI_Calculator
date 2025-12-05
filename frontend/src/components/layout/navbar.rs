@@ -13,17 +13,18 @@ pub fn Navbar() -> Element {
 
     rsx! {
         nav { class: "text-gray-900 fixed w-full z-20 top-0 start-0 border-b border-default bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm",
-            div { class: "max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4",
+            div { class: "flex flex-wrap items-center justify-between p-4",
                 a { class: "flex items-center space-x-3 rtl:space-x-reverse",
                     img {
                         alt: "Debt to Income Logo",
                         class: "h-7",
                         src: "https://flowbite.com/docs/images/logo.svg",
                     }
-                    span { class: "self-center text-xl text-heading font-semibold whitespace-nowrap",
+                    Link {
+                        to: Route::Home {},
+                        class: "self-center text-xl text-heading font-semibold whitespace-nowrap",
                         "DTI Calculator"
                     }
-                    Link { to: Route::Home {}, "Home" }
                 }
                 button {
                     aria_controls: "navbar-default",
@@ -61,21 +62,21 @@ pub fn Navbar() -> Element {
                                 to: Route::Home {},
                                 onclick: move |_| {
                                     reset.with_mut(|r| *r += 1usize);
-                                    // show brief toast
                                     toast.set(Some("Reset complete".to_string()));
                                     #[cfg(target_arch = "wasm32")]
                                     {
-                                        // auto-clear after 2.5s on web
                                         let toast_clone = toast.clone();
-                                        let closure = Closure::wrap(Box::new(move || {
-                                            toast_clone.set(None);
-                                        }) as Box<dyn Fn()>);
+                                        let closure = Closure::wrap(
+                                            Box::new(move || {
+                                                toast_clone.set(None);
+                                            }) as Box<dyn Fn()>,
+                                        );
                                         if let Some(win) = web_sys::window() {
-                                            let _ = win.set_timeout_with_callback_and_timeout_and_arguments_0(
-                                                closure.as_ref().unchecked_ref(),
-                                                2500,
-                                            );
-                                            // prevent the closure from being dropped immediately
+                                            let _ = win
+                                                .set_timeout_with_callback_and_timeout_and_arguments_0(
+                                                    closure.as_ref().unchecked_ref(),
+                                                    2500,
+                                                );
                                             closure.forget();
                                         }
                                     }

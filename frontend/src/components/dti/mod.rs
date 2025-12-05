@@ -6,3 +6,6 @@ pub use housing_payment::HousingPayment;
 
 pub mod debts;
 pub use debts::Debts;
+
+pub mod result;
+pub use result::Result;

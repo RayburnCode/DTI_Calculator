@@ -24,6 +24,13 @@ pub fn Income() -> Element {
     let total_income = use_memo(move || {
         incomes_list.read().iter().map(|i| i.monthly_amount).sum::<f64>()
     });
+    
+    // Update global total_income context
+    let mut total_income_ctx = use_context::<Signal<f64>>();
+    use_effect(move || {
+        total_income_ctx.set(total_income());
+    });
+    
     // Listen for global reset signal and clear local state when it increments
     let reset = use_context::<Signal<usize>>();
     use_effect(move || {
@@ -36,6 +43,86 @@ pub fn Income() -> Element {
             monthly_amount.set(String::new());
         }
     });
+    
+    // Helper for formatting money with commas
+    fn format_money(amount: f64) -> String {
+        let abs_amount = amount.abs();
+        let formatted = format!("{:.2}", abs_amount);
+        let parts: Vec<&str> = formatted.split('.').collect();
+        let integer_part = parts[0];
+        let decimal_part = parts.get(1).unwrap_or(&"00");
+        
+        let mut result = String::new();
+        for (i, ch) in integer_part.chars().rev().enumerate() {
+            if i > 0 && i % 3 == 0 {
+                result.push(',');
+            }
+            result.push(ch);
+        }
+        let formatted_int = result.chars().rev().collect::<String>();
+        
+        if amount < 0.0 && amount < -0.001 {
+            format!("-${}.{}", formatted_int, decimal_part)
+        } else {
+            format!("${}.{}", formatted_int, decimal_part)
+        }
+    }
+    
+    // Helper to format input display with commas
+    fn format_currency_input(value: &str) -> String {
+        // Remove non-numeric characters except decimal point
+        let cleaned: String = value.chars().filter(|c| c.is_numeric() || *c == '.').collect();
+        if cleaned.is_empty() {
+            return String::new();
+        }
+        
+        // Don't format while typing - just return cleaned input
+        // Only validate it's a valid number format
+        if cleaned.contains('.') {
+            let parts: Vec<&str> = cleaned.split('.').collect();
+            if parts.len() == 2 {
+                let integer_part = parts[0];
+                let decimal_part = parts[1];
+                
+                // Add commas to integer part
+                let mut result = String::new();
+                for (i, ch) in integer_part.chars().rev().enumerate() {
+                    if i > 0 && i % 3 == 0 {
+                        result.push(',');
+                    }
+                    result.push(ch);
+                }
+                let formatted_int = result.chars().rev().collect::<String>();
+                
+                // Limit decimal to 2 places
+                let limited_decimal = if decimal_part.len() > 2 {
+                    &decimal_part[..2]
+                } else {
+                    decimal_part
+                };
+                
+                format!("{}.{}", formatted_int, limited_decimal)
+            } else {
+                cleaned
+            }
+        } else {
+            // Add commas to integer part only
+            let mut result = String::new();
+            for (i, ch) in cleaned.chars().rev().enumerate() {
+                if i > 0 && i % 3 == 0 {
+                    result.push(',');
+                }
+                result.push(ch);
+            }
+            result.chars().rev().collect::<String>()
+        }
+    }
+    
+    // Helper to parse currency input (removes commas)
+    fn parse_currency(value: &str) -> Result<f64, std::num::ParseFloatError> {
+        let cleaned: String = value.chars().filter(|c| c.is_numeric() || *c == '.').collect();
+        cleaned.parse::<f64>()
+    }
     
     rsx! {
         div { class: "space-y-4",
@@ -51,7 +138,7 @@ pub fn Income() -> Element {
                         r#type: "text",
                         id: "income_description",
                         name: "income_description",
-                        placeholder: "e.g., Salary, Bonus",
+                        placeholder: "e.g., Company Name",
                         class: "px-3 py-2 border border-gray-300 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition",
                         value: "{description}",
                         oninput: move |evt| {
@@ -84,14 +171,16 @@ pub fn Income() -> Element {
                         "Monthly Amount"
                     }
                     input {
-                        r#type: "number",
+                        r#type: "text",
                         id: "monthly_amount",
                         name: "monthly_amount",
                         placeholder: "0.00",
+                        inputmode: "decimal",
                         class: "px-3 py-2 border border-gray-300 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition",
                         value: "{monthly_amount}",
                         oninput: move |evt| {
-                            monthly_amount.set(evt.value());
+                            let formatted = format_currency_input(&evt.value());
+                            monthly_amount.set(formatted);
                         },
                     }
                 }
@@ -104,7 +193,7 @@ pub fn Income() -> Element {
                     let itype = income_type.read().clone();
                     let amount_str = monthly_amount.read().clone();
                     if !desc.is_empty() && !itype.is_empty() && !amount_str.is_empty() {
-                        if let Ok(amount) = amount_str.parse::<f64>() {
+                        if let Ok(amount) = parse_currency(&amount_str) {
                             if let Some(edit_id) = editing_id() {
                                 incomes_list
                                     .write()
@@ -165,7 +254,7 @@ pub fn Income() -> Element {
                                         class: "grid grid-cols-12 gap-2 px-3 py-3 bg-gray-50 rounded-lg items-center hover:bg-gray-100 transition",
                                         div { class: "col-span-4 text-gray-800", "{income_desc}" }
                                         div { class: "col-span-3 text-gray-800", "{income_type_val}" }
-                                        div { class: "col-span-3 text-right font-semibold text-gray-800", "${income_amount:.2}" }
+                                        div { class: "col-span-3 text-right font-semibold text-gray-800 px-4", "{format_money(income_amount)}" }
                                         div { class: "col-span-2 flex gap-2 justify-center",
                                             // Edit button
                                             button {
@@ -205,7 +294,7 @@ pub fn Income() -> Element {
             div { class: "mt-6 pt-4 border-t border-gray-200",
                 div { class: "flex justify-between items-center",
                     span { class: "text-lg font-semibold text-gray-700", "Total Monthly Income:" }
-                    span { class: "text-2xl font-bold text-green-600", "${total_income:.2}" }
+                    span { class: "text-2xl font-bold text-green-600", "{format_money(total_income())}" }
                 }
             }
         }
