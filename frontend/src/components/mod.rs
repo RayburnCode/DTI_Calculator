@@ -7,6 +7,5 @@
 pub mod layout;
 
 pub mod search_bar;
-pub use search_bar::SearchBar;
 
 pub mod dti;

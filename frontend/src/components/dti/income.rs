@@ -2,6 +2,7 @@
 
 
 use dioxus::prelude::*;
+use crate::components::layout::layout::TotalIncome;
 
 #[derive(Clone, PartialEq)]
 struct IncomeItem {
@@ -26,10 +27,10 @@ pub fn Income() -> Element {
     });
     
     // Update global total_income context
-    let mut total_income_ctx = use_context::<Signal<f64>>();
-    use_effect(move || {
+    let TotalIncome(mut total_income_ctx) = use_context::<TotalIncome>();
+    use_effect(use_reactive!(|(total_income,)| {
         total_income_ctx.set(total_income());
-    });
+    }));
     
     // Listen for global reset signal and clear local state when it increments
     let reset = use_context::<Signal<usize>>();
@@ -187,7 +188,7 @@ pub fn Income() -> Element {
             }
             // Add/Update button
             button {
-                class: "px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 shadow-sm hover:shadow-md",
+                class: "cursor-pointer px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 shadow-sm hover:shadow-md",
                 onclick: move |_| {
                     let desc = description.read().clone();
                     let itype = income_type.read().clone();
@@ -254,11 +255,13 @@ pub fn Income() -> Element {
                                         class: "grid grid-cols-12 gap-2 px-3 py-3 bg-gray-50 rounded-lg items-center hover:bg-gray-100 transition",
                                         div { class: "col-span-4 text-gray-800", "{income_desc}" }
                                         div { class: "col-span-3 text-gray-800", "{income_type_val}" }
-                                        div { class: "col-span-3 text-right font-semibold text-gray-800 px-4", "{format_money(income_amount)}" }
+                                        div { class: "col-span-3 text-right font-semibold text-gray-800 px-4",
+                                            "{format_money(income_amount)}"
+                                        }
                                         div { class: "col-span-2 flex gap-2 justify-center",
                                             // Edit button
                                             button {
-                                                class: "px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition",
+                                                class: "cursor-pointer px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition",
                                                 onclick: move |_| {
                                                     if let Some(i) = incomes_list.read().iter().find(|i| i.id == income_id) {
                                                         description.set(i.description.clone());
@@ -271,7 +274,7 @@ pub fn Income() -> Element {
                                             }
                                             // Delete button
                                             button {
-                                                class: "px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded transition",
+                                                class: "cursor-pointer px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded transition",
                                                 onclick: move |_| {
                                                     incomes_list.write().retain(|i| i.id != income_id);
                                                     if editing_id() == Some(income_id) {

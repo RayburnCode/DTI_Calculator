@@ -1,15 +1,31 @@
 [application]
+name = "DTI Calculator"
+default_platform = "desktop"
+#out_dir = "dist"
+#asset_dir = "public"
+
+[bundle]
+identifier = "com.Rayburncode.DTICalculator"
+publisher = "RayburnCode"
+icon = ["assets/icon.png"]
+copyright = "Copyright 2025 RayburnCode"
+category = "Finance"
+short_description = "Mortgage Debt to Income Calculator."
+long_description = "A utility application built with Dioxus for individuals to calculate mortgage debt to income ratios."
+
 
 [web.app]
 
 # HTML title tag content
-title = "frontend"
+title = "DTI Calculator"
 
 # include `assets` in web platform
 [web.resource]
 
 # Additional CSS style files
-style = []
+style = [
+    "/assets/tailwind.css",
+]
 
 # Additional JavaScript files
 script = []

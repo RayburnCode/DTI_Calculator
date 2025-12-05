@@ -2,6 +2,7 @@
 
 
 use dioxus::prelude::*;
+use crate::components::layout::layout::TotalDebt;
 
 #[derive(Clone, PartialEq)]
 struct Debt {
@@ -26,10 +27,10 @@ pub fn Debts() -> Element {
     });
     
     // Update global total_debt context
-    let mut total_debt_ctx = use_context::<Signal<f64>>();
-    use_effect(move || {
+    let TotalDebt(mut total_debt_ctx) = use_context::<TotalDebt>();
+    use_effect(use_reactive!(|(total_debt,)| {
         total_debt_ctx.set(total_debt());
-    });
+    }));
     
     // Listen for global reset signal and clear local state when it increments
     let reset = use_context::<Signal<usize>>();
@@ -187,7 +188,7 @@ pub fn Debts() -> Element {
             }
             // Add/Update button
             button {
-                class: "px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-200 shadow-sm hover:shadow-md",
+                class: "cursor-pointer px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-200 shadow-sm hover:shadow-md",
                 onclick: move |_| {
                     let desc = description.read().clone();
                     let dtype = debt_type.read().clone();
@@ -260,7 +261,7 @@ pub fn Debts() -> Element {
                                         div { class: "col-span-2 flex gap-2 justify-center",
                                             // Edit button
                                             button {
-                                                class: "px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition",
+                                                class: "cursor-pointer px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded transition",
                                                 onclick: move |_| {
                                                     if let Some(d) = debts_list.read().iter().find(|d| d.id == debt_id) {
                                                         description.set(d.description.clone());
@@ -273,7 +274,7 @@ pub fn Debts() -> Element {
                                             }
                                             // Delete button
                                             button {
-                                                class: "px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded transition",
+                                                class: "cursor-pointer px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded transition",
                                                 onclick: move |_| {
                                                     debts_list.write().retain(|d| d.id != debt_id);
                                                     if editing_id() == Some(debt_id) {

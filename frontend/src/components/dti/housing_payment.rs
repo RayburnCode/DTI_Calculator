@@ -2,6 +2,7 @@
 
 
 use dioxus::prelude::*;
+use crate::components::layout::layout::TotalHousing;
 
 
 #[component]
@@ -16,6 +17,30 @@ pub fn HousingPayment() -> Element {
     fn parse_currency(value: &str) -> f64 {
         let cleaned: String = value.chars().filter(|c| c.is_numeric() || *c == '.').collect();
         cleaned.parse::<f64>().unwrap_or(0.0)
+    }
+    
+    // Helper for formatting money with commas
+    fn format_money(amount: f64) -> String {
+        let abs_amount = amount.abs();
+        let formatted = format!("{:.2}", abs_amount);
+        let parts: Vec<&str> = formatted.split('.').collect();
+        let integer_part = parts[0];
+        let decimal_part = parts.get(1).unwrap_or(&"00");
+        
+        let mut result = String::new();
+        for (i, ch) in integer_part.chars().rev().enumerate() {
+            if i > 0 && i % 3 == 0 {
+                result.push(',');
+            }
+            result.push(ch);
+        }
+        let formatted_int = result.chars().rev().collect::<String>();
+        
+        if amount < 0.0 && amount < -0.001 {
+            format!("-${}.{}", formatted_int, decimal_part)
+        } else {
+            format!("${}.{}", formatted_int, decimal_part)
+        }
     }
     
     // Helper to format input display with commas
@@ -78,10 +103,10 @@ pub fn HousingPayment() -> Element {
     });
     
     // Update global total_housing context
-    let mut total_housing_ctx = use_context::<Signal<f64>>();
-    use_effect(move || {
+    let TotalHousing(mut total_housing_ctx) = use_context::<TotalHousing>();
+    use_effect(use_reactive!(|(total_housing_payment,)| {
         total_housing_ctx.set(total_housing_payment());
-    });
+    }));
 
     // Listen for global reset signal and clear housing payment fields
     let reset = use_context::<Signal<usize>>();
@@ -96,15 +121,10 @@ pub fn HousingPayment() -> Element {
     });
     
     rsx! {
-        div {
-            class: "space-y-4",
-            
+        div { class: "space-y-4",
             // Input grid
-            div {
-                class: "grid grid-cols-1 md:grid-cols-2 gap-4",
-                
-                div {
-                    class: "flex flex-col",
+            div { class: "grid grid-cols-1 md:grid-cols-2 gap-4",
+                div { class: "flex flex-col",
                     label {
                         r#for: "principal_interest",
                         class: "text-sm font-medium text-gray-700 mb-1",
@@ -124,9 +144,7 @@ pub fn HousingPayment() -> Element {
                         },
                     }
                 }
-                
-                div {
-                    class: "flex flex-col",
+                div { class: "flex flex-col",
                     label {
                         r#for: "taxes",
                         class: "text-sm font-medium text-gray-700 mb-1",
@@ -146,9 +164,7 @@ pub fn HousingPayment() -> Element {
                         },
                     }
                 }
-                
-                div {
-                    class: "flex flex-col",
+                div { class: "flex flex-col",
                     label {
                         r#for: "insurance",
                         class: "text-sm font-medium text-gray-700 mb-1",
@@ -168,9 +184,7 @@ pub fn HousingPayment() -> Element {
                         },
                     }
                 }
-                
-                div {
-                    class: "flex flex-col",
+                div { class: "flex flex-col",
                     label {
                         r#for: "hoa",
                         class: "text-sm font-medium text-gray-700 mb-1",
@@ -191,19 +205,14 @@ pub fn HousingPayment() -> Element {
                     }
                 }
             }
-            
             // Total display
-            div {
-                class: "mt-6 pt-4 border-t border-gray-200",
-                div {
-                    class: "flex justify-between items-center",
-                    span {
-                        class: "text-lg font-semibold text-gray-700",
-                        "Total Housing Payment:"
+            div { class: "mt-6 pt-4 border-t border-gray-200",
+                div { class: "flex justify-between items-center",
+                    span { class: "text-lg font-semibold text-gray-700",
+                        "Total Monthly Housing Payment:"
                     }
-                    span {
-                        class: "text-2xl font-bold text-blue-600",
-                        "${total_housing_payment:.2}"
+                    span { class: "text-2xl font-bold text-blue-600",
+                        "{format_money(total_housing_payment())}"
                     }
                 }
             }

@@ -9,7 +9,7 @@ pub fn Home() -> Element {
             // Header
             div { class: "text-center mb-8",
                 h1 { class: "text-3xl font-bold mb-2", "Debt-to-Income Calculator" }
-                p { class: "text-gray-800",
+                p { class: "text-gray-200",
                     "Enter your income and debts above to calculate your DTI ratio"
                 }
             }
