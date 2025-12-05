@@ -1,5 +1,5 @@
 [package]
-name = "frontend"
+name = "dti-calculator"
 version = "0.1.0"
 authors = ["RayburnCode <rayburncode@gmail.com>"]
 edition = "2021"
@@ -7,8 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { version = "0.7.1", features = ["router"] }
-dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false, features = ["router"] }
+dioxus = { version = "0.7.2", features = ["router"] }
 tokio = { version = "1", features = ["time"], optional = true }
 gloo-timers = { version = "0.3", features = ["futures"], optional = true }
 

@@ -134,13 +134,17 @@ pub fn Result() -> Element {
                                 p { class: "text-sm text-gray-600 italic",
                                     "Please enter income for more accurate result"
                                 }
-                            } else if backend_dti() <= 36.0 {
+                            } else if backend_dti() <= 28.0 {
                                 p { class: "text-sm text-green-700 font-semibold",
                                     "✓ Excellent - Within recommended range"
                                 }
-                            } else if backend_dti() <= 43.0 {
+                            } else if backend_dti() <= 40.0 {
+                                p { class: "text-sm text-green-700 font-semibold",
+                                    "✓ Acceptable - Within recommended range"
+                                }
+                            } else if backend_dti() <= 45.0 {
                                 p { class: "text-sm text-yellow-700 font-semibold",
-                                    "⚠ Caution - Higher risk"
+                                    "⚠ Caution - Above ideal range, may require additional review"
                                 }
                             } else {
                                 p { class: "text-sm text-red-700 font-semibold",
